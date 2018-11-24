@@ -1,0 +1,8 @@
+starlette
+requests
+jwt
+
+# Testing
+codecov
+pytest
+pytest-cov
