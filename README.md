@@ -102,6 +102,13 @@ pipenv shell
 pytest --cov=starlette_test/
 ```
 
+# Deploying new version to pypi (Mainteiners)
+```bash
+
+python3.7 setup.py sdist
+twine upload --repository-url https://pypi.org/legacy/ dist/*
+
+```
 ## Thanks
 *  Starlette project - https://github.com/encode/starlette
 * apistar-jwt project - https://github.com/audiolion/apistar-jwt
