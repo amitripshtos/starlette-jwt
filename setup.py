@@ -8,8 +8,6 @@ from setuptools import setup, find_packages
 with open('README.md') as readme_file:
     readme = readme_file.read()
 
-with open('HISTORY.md') as history_file:
-    history = history_file.read()
 
 requirements = [
     'starlette',
@@ -29,15 +27,15 @@ test_requirements = [
 
 setup(
     name='starlette_jwt',
-    version='0.1.0',
+    version='0.1.2',
     description="A JSON Web Token Middleware for Starlette",
-    long_description=readme + '\n\n' + history,
+    long_description=readme,
     author="Amit Ripshtos",
     url='https://github.com/amitripshtos/starlette-jwt',
     packages=find_packages(include=['starlette_jwt']),
     include_package_data=True,
     install_requires=requirements,
-    license="MIT license",
+    license="BSD",
     zip_safe=False,
     keywords='starlette_jwt',
     classifiers=[
