@@ -11,10 +11,10 @@ def authentication_required(func):
     """
     @functools.wraps(func)
     async def wrapper_verify_authentication(request, *args, **kwargs):
-        if 'authentication' not in request.headers or not request.session:
-            raise AuthenticationFailed(status_code=401, detail='Authentication credentials were not provided.')
+        if 'authorization' not in request.headers or not request.session:
+            raise AuthenticationFailed(status_code=401, detail='Authentication credentials were not provided')
 
-        return await func(*args, **kwargs)
+        return await func(request, *args, **kwargs)
 
     return wrapper_verify_authentication
 

@@ -35,11 +35,11 @@ class JWTAuthenticationMiddleware:
         :return:
         """
         if authorization is None:
-            raise AuthenticationFailed(status_code=401, detail='Authorization header is missing.')
+            raise AuthenticationFailed(status_code=401, detail='Authorization header is missing')
         try:
             scheme, token = authorization.split()
         except ValueError:
-            raise AuthenticationFailed(status_code=401, detail='Could not separate Authorization scheme and token.')
+            raise AuthenticationFailed(status_code=401, detail='Could not separate Authorization scheme and token')
         if scheme.lower() != self.prefix.lower():
             raise AuthenticationFailed(status_code=401, detail='Authorization scheme {} is not supported'.format(scheme))
         return token
