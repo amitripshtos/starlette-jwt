@@ -32,7 +32,6 @@ setup(
     version='0.1.0',
     description="A JSON Web Token Middleware for Starlette",
     long_description=readme + '\n\n' + history,
-    long_description_content_type='text/markdown',
     author="Amit Ripshtos",
     url='https://github.com/amitripshtos/starlette-jwt',
     packages=find_packages(include=['starlette_jwt']),
@@ -44,7 +43,6 @@ setup(
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',
         'Intended Audience :: Developers',
-        'License :: OSI Approved :: BSD 3-Clause License',
         'Natural Language :: English',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.5',
