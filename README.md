@@ -3,7 +3,7 @@ JWT Middleware for the pythonic Starlette API framework
 
 # starlette-jwt
 
-[![pypi](https://img.shields.io/pypi/v/starlette_jwt.svg)](https://pypi.org/project/starlette-jwt) [![travis](https://img.shields.io/travis/amitripshtos/starlette-jwt.svg)](https://travis-ci.org/amitripshtos/starlette_jwt) [![codecov](https://codecov.io/gh/amitripshtos/starlette-jwt/branch/master/graph/badge.svg)](https://codecov.io/gh/amitripshtos/starlette-jwt)
+[![pypi](https://img.shields.io/pypi/v/starlette_jwt.svg)](https://pypi.org/project/starlette-jwt) [![travis](https://img.shields.io/travis/amitripshtos/starlette-jwt.svg)](https://travis-ci.org/amitripshtos/starlette-jwt) [![codecov](https://codecov.io/gh/amitripshtos/starlette-jwt/branch/master/graph/badge.svg)](https://codecov.io/gh/amitripshtos/starlette-jwt)
 
 
 JSON Web Token Middleware for use with Starlette framework.
