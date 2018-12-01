@@ -1,8 +1,12 @@
 from starlette.applications import Starlette
 from starlette_jwt import JWTAuthenticationMiddleware
+from starlette_jwt.middleware import json_exception_handler
 from starlette.responses import JSONResponse
+from starlette.requests import Request, Scope
 from starlette.testclient import TestClient
 import jwt
+from starlette.types import ASGIApp
+import json
 
 
 async def with_auth(request):
@@ -39,3 +43,14 @@ def test_header_parse():
     # Good headers
     response = client.get("/auth", headers=dict(Authorization=f'JWT {jwt.encode(dict(username="user"), secret_key).decode()}'))
     assert response.json() == {"session": {"username": "user"}}
+
+
+def test_get_token_from_header():
+    token = jwt.encode(dict(username="user"), 'secret').decode()
+    assert token == JWTAuthenticationMiddleware.get_token_from_header(authorization=f'JWT {token}', prefix='JWT')
+
+
+def test_json_exception_handler():
+    response = json_exception_handler(request=Request({"type": "http", "method": "POST", "path": "/"}), exc=Exception('test'))
+    assert response.body == JSONResponse({'error': 'Exception', 'detail': 'test'}, status_code=500).body
+    assert response.status_code == 500

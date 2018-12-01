@@ -14,6 +14,9 @@ class AuthenticationFailed(HTTPException):
     pass
 
 
+AUTHORIZATION_HEADER = 'authorization'
+
+
 class JWTAuthenticationMiddleware:
     def __init__(
         self,
@@ -27,7 +30,8 @@ class JWTAuthenticationMiddleware:
         self.prefix = prefix
         self.exception_handler = exception_handler or json_exception_handler
 
-    def get_token_from_header(self, authorization: str):
+    @classmethod
+    def get_token_from_header(cls, authorization: str, prefix: str):
         """
         Parses the Authorization header and returns only the token
 
@@ -40,16 +44,16 @@ class JWTAuthenticationMiddleware:
             scheme, token = authorization.split()
         except ValueError:
             raise AuthenticationFailed(status_code=401, detail='Could not separate Authorization scheme and token')
-        if scheme.lower() != self.prefix.lower():
+        if scheme.lower() != prefix.lower():
             raise AuthenticationFailed(status_code=401, detail='Authorization scheme {} is not supported'.format(scheme))
         return token
 
     def __call__(self, scope: Scope) -> ASGIInstance:
         if scope["type"] in ("http", "websocket"):
             headers = Headers(scope=scope)
-            if headers.get('authorization'):
+            if headers.get(AUTHORIZATION_HEADER):
                 try:
-                    token = self.get_token_from_header(headers.get('authorization'))
+                    token = self.get_token_from_header(authorization=headers.get(AUTHORIZATION_HEADER), prefix=self.prefix)
                     payload = jwt.decode(token, key=self.secret_key)
                     scope['session'] = payload
                 except (AuthenticationFailed, jwt.InvalidTokenError) as e:
