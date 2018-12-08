@@ -27,11 +27,12 @@ Register the Middleware with your app.
 
 ```python
 from starlette.applications import Starlette
-from starlette_jwt import JWTAuthenticationMiddleware, authentication_required, anonymous_allowed
-
+from starlette_jwt import JWTAuthenticationBackend
+from starlette.middleware.authentication import AuthenticationMiddleware
 
 app = Starlette()
-app.add_middleware(JWTAuthenticationMiddleware, secret_key='secret', prefix='JWT')
+app.add_middleware(AuthenticationMiddleware, backend=JWTAuthenticationBackend(secret_key='secret', prefix='JWT'))
+
 ```
 
 Access the JWT payload in a request,
@@ -42,9 +43,11 @@ The `@authentication_required` decorator will enforce the user to be logged in f
 The default behavior is `@anonymous_allowed` so your code be explicit.
 
 ```python
+from starlette.authentication import requires
+
 def my_handler(request):
 @app.route('/noauth')
-@authentication_required
+@requires('authenticated')
 async def homepage(request):
     return JSONResponse({'payload': request.session})
 ```
@@ -52,7 +55,6 @@ async def homepage(request):
 Not all handlers must be with authentication
 ```python
 @app.route('/noauth')
-@anonymous_allowed
 async def homepage(request):
     return JSONResponse({'payload': None})
 ```
@@ -63,7 +65,7 @@ async def homepage(request):
 
 Store your secret key in this setting while creating the middleware:
 ```python
-app.add_middleware(JWTAuthenticationMiddleware, secret_key='MY SECRET KEY')
+app.add_middleware(AuthenticationMiddleware, backend=JWTAuthenticationBackend(secret_key='MY SECRET KEY'))
 ```
 
 *prefix*
@@ -71,7 +73,15 @@ app.add_middleware(JWTAuthenticationMiddleware, secret_key='MY SECRET KEY')
 Change the Authorization header prefix string (defualts to "JWT"):
 ```python
 # Example: changes the prefix to Bearer
-app.add_middleware(JWTAuthenticationMiddleware, secret_key='secret', prefix='Bearer')
+app.add_middleware(AuthenticationMiddleware, backend=JWTAuthenticationBackend(secret_key='secret', prefix='Bearer'))
+```
+
+*username_field*
+
+The user name field in the JWT token payload:
+```python
+# Example: changes the username field to "user"
+app.add_middleware(AuthenticationMiddleware, backend=JWTAuthenticationBackend(secret_key='secret', username_field='user'))
 ```
 
 ## Todo
