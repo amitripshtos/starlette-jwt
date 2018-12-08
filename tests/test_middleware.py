@@ -1,20 +1,19 @@
 from starlette.applications import Starlette
-from starlette_jwt import JWTAuthenticationMiddleware
-from starlette_jwt.middleware import json_exception_handler
+from starlette_jwt import JWTAuthenticationBackend
 from starlette.responses import JSONResponse
-from starlette.requests import Request, Scope
 from starlette.testclient import TestClient
+from starlette.middleware.authentication import AuthenticationMiddleware
 import jwt
-from starlette.types import ASGIApp
-import json
+from starlette.authentication import requires
 
 
+@requires('authenticated')
 async def with_auth(request):
-    return JSONResponse({'session': {"username": request.session.get('username')}})
+    return JSONResponse({'auth': {"username": request.user.display_name}})
 
 
 async def without_auth(request):
-    return JSONResponse({'session': None})
+    return JSONResponse({'auth': None})
 
 
 def create_app():
@@ -27,30 +26,33 @@ def create_app():
 def test_header_parse():
     secret_key = 'example'
     app = create_app()
-    app.add_middleware(JWTAuthenticationMiddleware, secret_key=secret_key, prefix='JWT')
+    app.add_middleware(AuthenticationMiddleware, backend=JWTAuthenticationBackend(secret_key=secret_key))
     client = TestClient(app)
 
     # Without prefix
     response = client.get("/auth",
                           headers=dict(Authorization=jwt.encode(dict(username="user"), secret_key).decode()))
-    assert response.json() == {'detail': 'Could not separate Authorization scheme and token', 'error': 'AuthenticationFailed'}
+    assert response.text == 'Could not separate Authorization scheme and token'
+    assert response.status_code == 400
 
     # Wrong prefix
     response = client.get("/auth",
                           headers=dict(Authorization=f'WRONG {jwt.encode(dict(username="user"), secret_key).decode()}'))
-    assert response.json() == {'detail': 'Authorization scheme WRONG is not supported', 'error': 'AuthenticationFailed'}
+    assert response.text == 'Authorization scheme WRONG is not supported'
+    assert response.status_code == 400
 
     # Good headers
     response = client.get("/auth", headers=dict(Authorization=f'JWT {jwt.encode(dict(username="user"), secret_key).decode()}'))
-    assert response.json() == {"session": {"username": "user"}}
+    assert response.json() == {"auth": {"username": "user"}}
+    assert response.status_code == 200
+
+    # Wrong secret key
+    response = client.get("/auth",
+                          headers=dict(Authorization=f'JWT {jwt.encode(dict(username="user"), "BAD SECRET").decode()}'))
+    assert response.text == 'Signature verification failed'
+    assert response.status_code == 400
 
 
 def test_get_token_from_header():
     token = jwt.encode(dict(username="user"), 'secret').decode()
-    assert token == JWTAuthenticationMiddleware.get_token_from_header(authorization=f'JWT {token}', prefix='JWT')
-
-
-def test_json_exception_handler():
-    response = json_exception_handler(request=Request({"type": "http", "method": "POST", "path": "/"}), exc=Exception('test'))
-    assert response.body == JSONResponse({'error': 'Exception', 'detail': 'test'}, status_code=500).body
-    assert response.status_code == 500
+    assert token == JWTAuthenticationBackend.get_token_from_header(authorization=f'JWT {token}', prefix='JWT')

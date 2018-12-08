@@ -1,21 +1,21 @@
 from starlette.applications import Starlette
 from starlette.responses import JSONResponse
 import uvicorn
-from starlette_jwt import JWTAuthenticationMiddleware, authentication_required, anonymous_allowed
-
+from starlette_jwt import JWTAuthenticationBackend
+from starlette.authentication import requires
+from starlette.middleware.authentication import AuthenticationMiddleware
 
 app = Starlette()
-app.add_middleware(JWTAuthenticationMiddleware, secret_key='secret', prefix='JWT')
+app.add_middleware(AuthenticationMiddleware, backend=JWTAuthenticationBackend(secret_key='secret', prefix='JWT'))
 
 
 @app.route('/noauth')
-@anonymous_allowed
 async def homepage(request):
     return JSONResponse({'hello': 'world'})
 
 
 @app.route('/auth')
-@authentication_required
+@requires('authenticated')
 async def homepage(request):
     return JSONResponse({'hello': request.session['username']})
 
