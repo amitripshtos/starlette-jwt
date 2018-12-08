@@ -34,8 +34,6 @@ class JWTAuthenticationBackend(AuthenticationBackend):
         :param authorization:
         :return:
         """
-        if authorization is None:
-            raise AuthenticationError('Authorization header is missing')
         try:
             scheme, token = authorization.split()
         except ValueError:

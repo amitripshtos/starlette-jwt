@@ -1,5 +1,5 @@
 from starlette.applications import Starlette
-from starlette_jwt import JWTAuthenticationBackend
+from starlette_jwt import JWTAuthenticationBackend, JWTUser
 from starlette.responses import JSONResponse
 from starlette.testclient import TestClient
 from starlette.middleware.authentication import AuthenticationMiddleware
@@ -29,6 +29,11 @@ def test_header_parse():
     app.add_middleware(AuthenticationMiddleware, backend=JWTAuthenticationBackend(secret_key=secret_key))
     client = TestClient(app)
 
+    # No token for auth endpoint
+    response = client.get("/auth")
+    assert response.text == 'Forbidden'
+    assert response.status_code == 403
+
     # Without prefix
     response = client.get("/auth",
                           headers=dict(Authorization=jwt.encode(dict(username="user"), secret_key).decode()))
@@ -56,3 +61,13 @@ def test_header_parse():
 def test_get_token_from_header():
     token = jwt.encode(dict(username="user"), 'secret').decode()
     assert token == JWTAuthenticationBackend.get_token_from_header(authorization=f'JWT {token}', prefix='JWT')
+
+
+def test_user_object():
+    payload = dict(username="user")
+    token = jwt.encode(payload, "BAD SECRET").decode()
+    user_object = JWTUser(username="user", payload=payload, token=token)
+    assert user_object.is_authenticated == True
+    assert user_object.display_name == 'user'
+    assert user_object.token == token
+    assert user_object.payload == payload
