@@ -36,36 +36,36 @@ def test_header_parse():
 
     # Without prefix
     response = client.get("/auth",
-                          headers=dict(Authorization=jwt.encode(dict(username="user"), secret_key).decode()))
+                          headers=dict(Authorization=jwt.encode(dict(username="user"), secret_key, algorithm='HS256').decode()))
     assert response.text == 'Could not separate Authorization scheme and token'
     assert response.status_code == 400
 
     # Wrong prefix
     response = client.get("/auth",
-                          headers=dict(Authorization=f'WRONG {jwt.encode(dict(username="user"), secret_key).decode()}'))
+                          headers=dict(Authorization=f'WRONG {jwt.encode(dict(username="user"), secret_key, algorithm="HS256").decode()}'))
     assert response.text == 'Authorization scheme WRONG is not supported'
     assert response.status_code == 400
 
     # Good headers
-    response = client.get("/auth", headers=dict(Authorization=f'JWT {jwt.encode(dict(username="user"), secret_key).decode()}'))
+    response = client.get("/auth", headers=dict(Authorization=f'JWT {jwt.encode(dict(username="user"), secret_key, algorithm="HS256").decode()}'))
     assert response.json() == {"auth": {"username": "user"}}
     assert response.status_code == 200
 
     # Wrong secret key
     response = client.get("/auth",
-                          headers=dict(Authorization=f'JWT {jwt.encode(dict(username="user"), "BAD SECRET").decode()}'))
+                          headers=dict(Authorization=f'JWT {jwt.encode(dict(username="user"), "BAD SECRET", algorithm="HS256").decode()}'))
     assert response.text == 'Signature verification failed'
     assert response.status_code == 400
 
 
 def test_get_token_from_header():
-    token = jwt.encode(dict(username="user"), 'secret').decode()
+    token = jwt.encode(dict(username="user"), 'secret', algorithm="HS256").decode()
     assert token == JWTAuthenticationBackend.get_token_from_header(authorization=f'JWT {token}', prefix='JWT')
 
 
 def test_user_object():
     payload = dict(username="user")
-    token = jwt.encode(payload, "BAD SECRET").decode()
+    token = jwt.encode(payload, "BAD SECRET", algorithm="HS256").decode()
     user_object = JWTUser(username="user", payload=payload, token=token)
     assert user_object.is_authenticated == True
     assert user_object.display_name == 'user'

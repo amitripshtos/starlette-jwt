@@ -27,7 +27,7 @@ test_requirements = [
 
 setup(
     name='starlette_jwt',
-    version='0.1.4',
+    version='0.1.5',
     description="A JSON Web Token Middleware for Starlette",
     long_description=readme,
     author="Amit Ripshtos",
