@@ -68,9 +68,17 @@ Store your secret key in this setting while creating the middleware:
 app.add_middleware(AuthenticationMiddleware, backend=JWTAuthenticationBackend(secret_key='MY SECRET KEY'))
 ```
 
+*algorithm*
+
+Configures the jwt algorithm to use (defaults to "HS256"):
+```python
+public_key = b'-----BEGIN PUBLIC KEY-----\nMHYwEAYHKoZIzj0CAQYFK4EEAC...'
+app.add_middleware(AuthenticationMiddleware, backend=JWTAuthenticationBackend(secret_key=public_key, algorithm='RS256'))
+```
+
 *prefix*
 
-Change the Authorization header prefix string (defualts to "JWT"):
+Change the Authorization header prefix string (defaults to "JWT"):
 ```python
 # Example: changes the prefix to Bearer
 app.add_middleware(AuthenticationMiddleware, backend=JWTAuthenticationBackend(secret_key='secret', prefix='Bearer'))
