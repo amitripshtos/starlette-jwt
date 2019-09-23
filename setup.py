@@ -30,6 +30,7 @@ setup(
     version='0.1.5',
     description="A JSON Web Token Middleware for Starlette",
     long_description=readme,
+    long_description_content_type="text/markdown",
     author="Amit Ripshtos",
     url='https://github.com/amitripshtos/starlette-jwt',
     packages=find_packages(include=['starlette_jwt']),
