@@ -1,5 +1,6 @@
 starlette>=0.9.7
 pyjwt
+cryptography>=2.7
 
 # Testing
 codecov

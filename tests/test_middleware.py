@@ -5,6 +5,9 @@ from starlette.testclient import TestClient
 from starlette.middleware.authentication import AuthenticationMiddleware
 import jwt
 from starlette.authentication import requires
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.backends import default_backend
+import os
 
 
 @requires('authenticated')
@@ -71,3 +74,45 @@ def test_user_object():
     assert user_object.display_name == 'user'
     assert user_object.token == token
     assert user_object.payload == payload
+
+
+def test_endpoint_without_authentication():
+    """
+    This test makes sure that we are able to have endpoints without any authentication.
+    """
+    secret_key = 'example'
+    app = create_app()
+    app.add_middleware(AuthenticationMiddleware, backend=JWTAuthenticationBackend(secret_key=secret_key, algorithm='RS256'))
+    client = TestClient(app)
+    response = client.get("/no-auth")
+    assert response.text == '{"auth":null}'
+    assert response.status_code == 200
+
+
+def test_rsa_algorithm():
+    """
+    This test makes sure RSA algo works with starlette-jwt
+    """
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    with open(os.path.join(current_dir,"./test-key.pem"), "rb") as key_file:
+        private_key = serialization.load_pem_private_key(
+            key_file.read(),
+            password=None,
+            backend=default_backend()
+        )
+
+    with open(os.path.join(current_dir, "test-key.pub"), "rb") as key_file:
+        public_key = serialization.load_pem_public_key(
+            key_file.read(),
+            backend=default_backend()
+        )
+
+    app = create_app()
+    app.add_middleware(AuthenticationMiddleware,
+                       backend=JWTAuthenticationBackend(secret_key=public_key, algorithm='RS256'))
+    client = TestClient(app)
+    response = client.get("/auth",
+                          headers=dict(
+                              Authorization=f'JWT {jwt.encode(dict(username="user"), private_key, algorithm="RS256").decode()}'))
+    assert response.json() == {"auth":{"username":"user"}}
+    assert response.status_code == 200

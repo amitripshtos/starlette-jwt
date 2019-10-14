@@ -70,11 +70,13 @@ app.add_middleware(AuthenticationMiddleware, backend=JWTAuthenticationBackend(se
 
 *algorithm*
 
-Configures the jwt algorithm to use (defaults to "HS256"):
+Configures the jwt algorithm to use (defaults to "HS256", "RSA256" available):
 ```python
 public_key = b'-----BEGIN PUBLIC KEY-----\nMHYwEAYHKoZIzj0CAQYFK4EEAC...'
 app.add_middleware(AuthenticationMiddleware, backend=JWTAuthenticationBackend(secret_key=public_key, algorithm='RS256'))
 ```
+
+**NOTE:** In order to make starlette-jwt with the RSA256 Algorithm, you must have the package cryptography>=2.7
 
 *prefix*
 
