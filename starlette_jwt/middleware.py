@@ -1,7 +1,7 @@
 import jwt
 from starlette.authentication import (
-    AuthenticationBackend, AuthenticationError, BaseUser, AuthCredentials
-)
+    AuthenticationBackend, AuthenticationError, BaseUser, AuthCredentials,
+    UnauthenticatedUser)
 
 
 class JWTUser(BaseUser):
@@ -45,7 +45,9 @@ class JWTAuthenticationBackend(AuthenticationBackend):
 
     async def authenticate(self, request):
         if "Authorization" not in request.headers:
-            return
+            if request.scope["type"] == "websocket":
+                return AuthCredentials(), UnauthenticatedUser()
+            return None
 
         auth = request.headers["Authorization"]
         token = self.get_token_from_header(authorization=auth, prefix=self.prefix)

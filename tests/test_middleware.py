@@ -1,4 +1,7 @@
+import pytest
 from starlette.applications import Starlette
+from starlette.websockets import WebSocketDisconnect, WebSocket
+
 from starlette_jwt import JWTAuthenticationBackend, JWTUser
 from starlette.responses import JSONResponse
 from starlette.testclient import TestClient
@@ -19,11 +22,58 @@ async def without_auth(request):
     return JSONResponse({'auth': None})
 
 
+async def ws_without_auth(websocket):
+    websocket = WebSocket(scope=websocket.scope, receive=websocket.receive, send=websocket.send)
+    await websocket.accept()
+    await websocket.send_text('No Authentication')
+    await websocket.close()
+
+
+@requires('authenticated')
+async def ws_with_auth(websocket):
+    websocket = WebSocket(scope=websocket.scope, receive=websocket.receive, send=websocket.send)
+    await websocket.accept()
+    await websocket.send_text('Authentication valid')
+    await websocket.close()
+
+
 def create_app():
     app = Starlette()
     app.add_route("/auth", with_auth, methods=["GET"])
     app.add_route("/no-auth", without_auth, methods=["GET"])
+    app.add_websocket_route("/ws-auth", ws_with_auth)
+    app.add_websocket_route("/ws-no-auth", ws_without_auth)
     return app
+
+
+def test_websocket_pass_authentication_without_headers():
+    app = create_app()
+    app.add_middleware(AuthenticationMiddleware, backend=JWTAuthenticationBackend(secret_key='example'))
+    client = TestClient(app)
+    with client.websocket_connect("/ws-no-auth") as websocket:
+        data = websocket.receive_text()
+        assert data == 'No Authentication'
+
+
+@pytest.mark.xfail(raises=WebSocketDisconnect)
+def test_websocket_fail_authentication_without_headers():
+    app = create_app()
+    app.add_middleware(AuthenticationMiddleware, backend=JWTAuthenticationBackend(secret_key='example'))
+    client = TestClient(app)
+    with client.websocket_connect("/ws-auth") as websocket:
+        pass
+
+
+def test_websocket_valid_authentication():
+    secret_key = 'example'
+    app = create_app()
+    app.add_middleware(AuthenticationMiddleware, backend=JWTAuthenticationBackend(secret_key=secret_key))
+    client = TestClient(app)
+    token = jwt.encode(dict(username="user"), secret_key, algorithm="HS256").decode()
+    with client.websocket_connect("/ws-auth", headers=dict(Authorization=f'JWT {token}')) as websocket:
+        data = websocket.receive_text()
+        assert data == 'Authentication valid'
+        assert websocket.scope['user'].is_authenticated
 
 
 def test_header_parse():
