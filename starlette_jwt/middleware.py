@@ -45,12 +45,34 @@ class JWTAuthenticationBackend(AuthenticationBackend):
 
     async def authenticate(self, request):
         if "Authorization" not in request.headers:
-            if request.scope["type"] == "websocket":
-                return AuthCredentials(), UnauthenticatedUser()
             return None
 
         auth = request.headers["Authorization"]
         token = self.get_token_from_header(authorization=auth, prefix=self.prefix)
+        try:
+            payload = jwt.decode(token, key=self.secret_key, algorithms=self.algorithm)
+        except jwt.InvalidTokenError as e:
+            raise AuthenticationError(str(e))
+
+        return AuthCredentials(["authenticated"]), JWTUser(username=payload[self.username_field], token=token,
+                                                           payload=payload)
+
+
+class JWTWebSocketAuthenticationBackend(AuthenticationBackend):
+
+    def __init__(self, secret_key: str, algorithm: str = 'HS256', query_param_name: str = 'jwt',
+                 username_field: str = 'username'):
+        self.secret_key = secret_key
+        self.algorithm = algorithm
+        self.query_param_name = query_param_name
+        self.username_field = username_field
+
+    async def authenticate(self, request):
+        if self.query_param_name not in request.query_params:
+            return AuthCredentials(), UnauthenticatedUser()
+
+        token = request.query_params[self.query_param_name]
+
         try:
             payload = jwt.decode(token, key=self.secret_key, algorithms=self.algorithm)
         except jwt.InvalidTokenError as e:
