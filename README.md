@@ -122,7 +122,7 @@ pipenv shell
 pytest --cov=starlette_test/
 ```
 
-# Deploying new version to pypi (Mainteiners)
+# Deploying new version to pypi (Maintainers)
 ```bash
 
 python3.7 setup.py sdist
