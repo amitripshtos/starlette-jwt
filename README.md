@@ -94,10 +94,25 @@ The user name field in the JWT token payload:
 app.add_middleware(AuthenticationMiddleware, backend=JWTAuthenticationBackend(secret_key='secret', username_field='user'))
 ```
 
+*audience*
+
+The audience field in the JWT token is validated:
+```python
+# Example: changes the username field to "user"
+app.add_middleware(AuthenticationMiddleware, backend=JWTAuthenticationBackend(secret_key='secret', username_field='user', audience='test_aud'))
+```
+
+*options*
+
+The options set to ignore audience verification:
+```python
+# Example: changes the username field to "user"
+app.add_middleware(AuthenticationMiddleware, backend=JWTAuthenticationBackend(secret_key='secret', username_field='user', options={"verify_aud": False}))
+```
+
 ## Todo
 
 *  Support JWT token standard payload
-*  Set JWT options (time expiration for example)
 
 
 ## Developing
