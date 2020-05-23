@@ -78,6 +78,48 @@ def test_websocket_valid_authentication():
         assert websocket.scope['user'].is_authenticated
 
 
+def test_websocket_valid_authentication_and_audience():
+    secret_key = 'example'
+    app = create_app()
+    app.add_middleware(AuthenticationMiddleware, backend=JWTWebSocketAuthenticationBackend(secret_key=secret_key,
+                                                                                           audience="test_aud"))
+    client = TestClient(app)
+    token = jwt.encode(dict(username="user", aud="test_aud"), secret_key, algorithm="HS256").decode()
+    with client.websocket_connect(f"/ws-auth?jwt={token}") as websocket:
+        data = websocket.receive_text()
+        assert data == 'Authentication valid'
+        assert websocket.scope['user'].is_authenticated
+
+
+def test_websocket_valid_authentication_and_audience_list():
+    secret_key = 'example'
+    app = create_app()
+    app.add_middleware(AuthenticationMiddleware, backend=JWTWebSocketAuthenticationBackend(secret_key=secret_key,
+                                                                                           audience=["test_aud"]))
+    client = TestClient(app)
+    token = jwt.encode(dict(username="user", aud="test_aud"), secret_key, algorithm="HS256").decode()
+    with client.websocket_connect(f"/ws-auth?jwt={token}") as websocket:
+        data = websocket.receive_text()
+        assert data == 'Authentication valid'
+        assert websocket.scope['user'].is_authenticated
+
+
+def test_websocket_valid_authentication_and_audience_and_option_ignore_audience():
+    secret_key = 'example'
+    app = create_app()
+    options = {"verify_aud": False}
+    app.add_middleware(AuthenticationMiddleware, backend=JWTWebSocketAuthenticationBackend(secret_key=secret_key,
+                                                                                           audience="test_aud",
+                                                                                           options=options))
+    client = TestClient(app)
+    token = jwt.encode(dict(username="user"), secret_key, algorithm="HS256",
+                       ).decode()
+    with client.websocket_connect(f"/ws-auth?jwt={token}") as websocket:
+        data = websocket.receive_text()
+        assert data == 'Authentication valid'
+        assert websocket.scope['user'].is_authenticated
+
+
 def test_websocket_invalid_token():
     secret_key = 'example'
     app = create_app()
